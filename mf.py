@@ -60,7 +60,7 @@ def main(args):
         embedding_dims=args.embedding_dims)
     
     logger = TensorBoardLogger("lightning_logs", name=f"MF_{args.embedding_dims}")
-    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
+    trainer = pl.Trainer.from_argparse_args(args, logger=logger, gpus=2)
 
     trainer.fit(model, data)
 

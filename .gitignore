@@ -133,3 +133,4 @@ ml-100k
 ctr
 lightning_logs
 *.zip
+/.idea/
