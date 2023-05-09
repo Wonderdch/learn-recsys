@@ -23,10 +23,10 @@ class NeuMF(nn.Module):
         self.Q = nn.Embedding(num_items, embedding_dims)
         self.U = nn.Embedding(num_users, embedding_dims)
         self.V = nn.Embedding(num_items, embedding_dims)
-        mlp = [nn.Linear(embedding_dims*2, hidden_dims[0]),
+        mlp = [nn.Linear(embedding_dims * 2, hidden_dims[0]),
                nn.ReLU()]
         for i in range(len(hidden_dims) - 1):
-            mlp += [nn.Linear(hidden_dims[i], hidden_dims[i+1]),
+            mlp += [nn.Linear(hidden_dims[i], hidden_dims[i + 1]),
                     nn.ReLU()]
         self.mlp = nn.Sequential(*mlp)
         self.output_layer = nn.Linear(
@@ -69,10 +69,11 @@ class LitNeuMF(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         user_id, item_id, is_pos = batch
         logit = self(user_id, item_id)
-        score = torch.sigmoid(logit).reshape(-1,)
+        score = torch.sigmoid(logit).reshape(-1, )
         self.hitrate.update(score, is_pos, user_id)
         return
 
+    # 在 training_step 后执行
     def training_epoch_end(self, outputs):
         avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
         self.logger.experiment.add_scalar(
@@ -98,8 +99,7 @@ def main(args):
     )
 
     logger = TensorBoardLogger("lightning_logs", name=f"NeuMF")
-    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
-
+    trainer = pl.Trainer.from_argparse_args(args, logger=logger, gpus=2, max_epochs=30)
     trainer.fit(model, data)
 
 

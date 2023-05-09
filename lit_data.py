@@ -3,6 +3,7 @@ from typing import Tuple
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
 
+
 class BaseDataset(Dataset, ABC):
     @abstractmethod
     def split(self, *args, **kwargs) -> Tuple[Dataset, Dataset]:
@@ -14,6 +15,7 @@ class BaseDataset(Dataset, ABC):
         Tuple[Dataset, Dataset]
             Two Dataset instances for training and validation/testing
         """
+
 
 class LitDataModule(pl.LightningDataModule):
     def __init__(self, dataset: BaseDataset,
