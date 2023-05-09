@@ -28,7 +28,7 @@ class FactorizationMachine(nn.Module):
 
     def forward(self, x, return_logit=False):
         v = self.embedding(x)
-        interaction = 1/2*(v.sum(1)**2 - (v**2).sum(1)).sum(-1, keepdims=True)
+        interaction = 1 / 2 * (v.sum(1) ** 2 - (v ** 2).sum(1)).sum(-1, keepdims=True)
         proj = self.proj(x).sum(1)
         logit = self.fc(proj + interaction).flatten()
         if return_logit:
@@ -88,7 +88,7 @@ class LitFM(pl.LightningModule):
 
 def main(args):
     data = LitDataModule(
-        CTRDataset(), 
+        CTRDataset(),
         batch_size=args.batch_size,
         num_workers=3,
         prefetch_factor=4)
@@ -99,7 +99,7 @@ def main(args):
         embedding_dims=args.embedding_dims)
 
     logger = TensorBoardLogger("lightning_logs", name=f"FM_{args.embedding_dims}")
-    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
+    trainer = pl.Trainer.from_argparse_args(args, logger=logger, gpus=1, max_epochs=30)
     trainer.fit(model, data)
 
 

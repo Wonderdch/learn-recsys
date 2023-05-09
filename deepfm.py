@@ -34,7 +34,7 @@ class DeepFM(nn.Module):
         self.mlp = nn.Sequential(
             *mlp_layer(self.embed_output_dim, mlp_dims[0], dropout),
             *[layer for i in range(len(mlp_dims) - 1)
-              for layer in mlp_layer(mlp_dims[i], mlp_dims[i+1], dropout)],
+              for layer in mlp_layer(mlp_dims[i], mlp_dims[i + 1], dropout)],
             nn.Linear(mlp_dims[-1], 1))
         self.init_param()
 
@@ -47,17 +47,20 @@ class DeepFM(nn.Module):
 
     def forward(self, x):
         v = self.embedding(x)
+
         # Factorization Machine
-        fm_interaction = 1/2*(v.sum(1)**2 - (v**2).sum(1)
-                              ).sum(-1, keepdims=True)
+        fm_interaction = 1 / 2 * (v.sum(1) ** 2 - (v ** 2).sum(1)).sum(-1, keepdims=True)
         fm_proj = self.proj(x).sum(1)
         fm_logit = self.fc(fm_proj + fm_interaction).flatten()
+
         # MLP
         mlp_logit = self.mlp(v.flatten(1)).flatten()
+
         logit = fm_logit + mlp_logit
         return torch.sigmoid(logit)
 
 
+# 训练相关的配置直接沿用了 FM 的
 class LitDeepFM(LitFM):
     def __init__(self, lr=0.002, **kwargs):
         super(LitFM, self).__init__()
@@ -79,13 +82,13 @@ def main(args):
 
     logger = TensorBoardLogger(
         "lightning_logs", name=f"DeepFM_{args.embedding_dims}")
-    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
+    trainer = pl.Trainer.from_argparse_args(args, logger=logger, gpus=1, max_epochs=60)
     trainer.fit(model, data)
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--embedding_dims", type=int, default=10)
+    parser.add_argument("--embedding_dims", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=1024)
     pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()

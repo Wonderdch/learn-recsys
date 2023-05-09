@@ -34,15 +34,15 @@ class Caser(nn.Module):
                 nn.Conv2d(1, num_hfilters, (h, embedding_dims)),
                 nn.ReLU(),
                 nn.AdaptiveMaxPool2d((1, 1)))
-            for h in range(1, L+1)])
+            for h in range(1, L + 1)])
         # Fully-connected layer
         self.fc = nn.Sequential(
             nn.Dropout(dropout),
             nn.Linear(
-                num_vfilters*embedding_dims + num_hfilters*L,
+                num_vfilters * embedding_dims + num_hfilters * L,
                 embedding_dims),
             nn.ReLU())
-        self.Q_out = nn.Embedding(num_items, 2*embedding_dims)
+        self.Q_out = nn.Embedding(num_items, 2 * embedding_dims)
         self.b_out = nn.Embedding(num_items, 1)
 
     def forward(self, user_id, seq, item_id):
@@ -53,7 +53,7 @@ class Caser(nn.Module):
         h = torch.cat([filt(item_emb) for filt in self.conv_h], axis=-2)
         x = self.fc(torch.cat([v.flatten(1), h.flatten(1)], -1))
         x = torch.cat([x, user_emb], -1)
-        logit = (self.Q_out(item_id)*x).sum(-1) + self.b_out(item_id).squeeze()
+        logit = (self.Q_out(item_id) * x).sum(-1) + self.b_out(item_id).squeeze()
         return logit
 
 
@@ -81,7 +81,7 @@ class LitCaser(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         user_id, seq, item_id, is_pos = batch
         logit = self(user_id, seq, item_id)
-        score = torch.sigmoid(logit).reshape(-1,)
+        score = torch.sigmoid(logit).reshape(-1, )
         self.hitrate.update(score, is_pos, user_id)
         return
 
@@ -110,7 +110,7 @@ def main(args):
 
     logger = TensorBoardLogger("lightning_logs",
                                name=f"Caser_{args.embedding_dims}_L{args.seq_len}")
-    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
+    trainer = pl.Trainer.from_argparse_args(args, logger=logger, gpus=2, max_epochs=60)
     trainer.fit(model, data)
 
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--embedding_dims", type=int, default=10)
     parser.add_argument("--seq_len", type=int, default=5)
-    parser.add_argument("--batch_size", type=int, default=1024)
+    parser.add_argument("--batch_size", type=int, default=2048)
     pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     main(args)

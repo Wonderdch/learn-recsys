@@ -39,12 +39,13 @@ class CTRDataset(BaseDataset):
             for col in self.feat_cols}
         # Feature mapper maps a unique encoded value to an identifier
         # So each value is considered to be a categorical value.
-        # Unique values are filtered with occurence greater or equal to min_threshold
+        # Unique values are filtered with occurrence greater or equal to min_threshold
         # A default value will be assign to values that not defined in feature mapper
         self.feat_mapper = {}
 
         def _constant_factory(v):
             return lambda: v
+
         for col, val_counts in feat_counts.items():
             val = val_counts.index[val_counts >= min_threshold]
             default = len(val)
