@@ -29,11 +29,12 @@ class AutoRec(nn.Module):
         y = self.decoder(h)
         return y
 
+
 class LitAutoRec(LitModel):
     def get_loss(self, m_outputs, batch):
         mask = (batch > 0).to(torch.float32)
-        m_outputs = m_outputs*mask
-        return F.mse_loss(m_outputs, batch) 
+        m_outputs = m_outputs * mask
+        return F.mse_loss(m_outputs, batch)
 
     def update_metric(self, m_outputs, batch):
         mask = batch > 0
@@ -46,13 +47,13 @@ class LitAutoRec(LitModel):
 def main(args):
     data = LitDataModule(ML100KRatingMatrix(), batch_size=args.batch_size)
     data.setup()
-    model = LitAutoRec(AutoRec, 
-            lr=0.01,
-            input_dim=data.num_users,
-            embedding_dims=args.embedding_dims)
-    
+    model = LitAutoRec(AutoRec,
+                       lr=0.01,
+                       input_dim=data.num_users,
+                       embedding_dims=args.embedding_dims)
+
     logger = TensorBoardLogger("lightning_logs", name=f"AutoRec_{args.embedding_dims}")
-    trainer = pl.Trainer.from_argparse_args(args, logger=logger)
+    trainer = pl.Trainer.from_argparse_args(args, logger=logger, gpus=2, max_epochs=30)
     trainer.fit(model, data)
 
 
@@ -63,5 +64,3 @@ if __name__ == "__main__":
     pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     main(args)
-
-
